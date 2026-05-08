@@ -1,10 +1,12 @@
 import { Request, Response } from "express";
 import * as Sentry from "@sentry/node";
 import { prisma } from "../../config/prisma.js";
+import { clerkClient } from "@clerk/express";
 
 /**
  * @name getUserCredits
  * @description Controller to get the credits of logged in user.
+ * Auto-creates user record if it doesn't exist (handles webhook delivery failures).
  * @access private
  */
 
@@ -12,10 +14,19 @@ export const getUserCredits = async (req: Request, res: Response) => {
   try {
     const userId = req.userId!;
 
-    const user = await prisma.user.findUnique({ where: { id: userId } });
+    let user = await prisma.user.findUnique({ where: { id: userId } });
 
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      // Webhook may have failed — fetch from Clerk and create the record
+      const clerkUser = await clerkClient.users.getUser(userId);
+      user = await prisma.user.create({
+        data: {
+          id: userId,
+          email: clerkUser.emailAddresses?.[0]?.emailAddress ?? "",
+          name: `${clerkUser.firstName ?? ""} ${clerkUser.lastName ?? ""}`.trim(),
+          image: clerkUser.imageUrl ?? "",
+        },
+      });
     }
 
     return res.status(200).json({
