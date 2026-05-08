@@ -28,11 +28,14 @@ const allowedOrigins = [
 app.use(
   cors({
     origin: function (origin, callback) {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error("Not allowed by CORS"));
-      }
+      // Allow requests with no origin (mobile apps, curl, Postman)
+      if (!origin) return callback(null, true);
+      // Allow exact matches
+      if (allowedOrigins.includes(origin)) return callback(null, true);
+      // Allow all Vercel preview deployments for this repo
+      if (/^https:\/\/[a-z0-9-]+-tecashe\.vercel\.app$/.test(origin)) return callback(null, true);
+      if (/^https:\/\/ugc-ai[a-z0-9-]*\.vercel\.app$/.test(origin)) return callback(null, true);
+      callback(new Error("Not allowed by CORS"));
     },
     credentials: true,
   }),
