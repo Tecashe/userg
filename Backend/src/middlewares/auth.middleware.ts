@@ -12,7 +12,7 @@ import { getAuth } from "@clerk/express";
 export const protect = (req: Request, res: Response, next: NextFunction) => {
   try {
     const auth = getAuth(req);
-    if (!auth.isAuthenticated) {
+    if (!auth.userId) {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
