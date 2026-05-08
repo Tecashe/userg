@@ -1,0 +1,24 @@
+# Prisma generated client
+/generated/prisma
+node_modules/.prisma
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Environment variables
+.env
+.env.*
+!.env.example
+
+# Temporary video files
+videos/
+/tmp/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
