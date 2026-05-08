@@ -31,7 +31,7 @@ export const generateAIImage = async (
     const response = await axios.post(
       "https://openrouter.ai/api/v1/chat/completions",
       {
-        model: "black-forest-labs/flux.2-pro",
+        model: "openai/gpt-image-1",
         messages: [
           {
             role: "user",
@@ -51,7 +51,6 @@ Aspect ratio ${aspectRatio || "9:16"}.
             ],
           },
         ],
-        modalities: ["image"],
       },
       {
         headers: {
@@ -61,10 +60,24 @@ Aspect ratio ${aspectRatio || "9:16"}.
       },
     );
 
-    const image =
-      response.data?.choices?.[0]?.message?.images?.[0]?.image_url?.url;
+    // Handle both array content and string content responses
+    const message = response.data?.choices?.[0]?.message;
+    const content = message?.content;
 
-    if (!image) throw new Error("No image returned");
+    let image: string | undefined;
+
+    if (Array.isArray(content)) {
+      // Content is array of parts — find the image_url part
+      const imagePart = content.find((c: any) => c.type === "image_url");
+      image = imagePart?.image_url?.url;
+    } else if (typeof content === "string" && content.startsWith("data:image")) {
+      image = content;
+    }
+
+    if (!image) {
+      console.error("Unexpected response structure:", JSON.stringify(response.data));
+      throw new Error("No image returned");
+    }
 
     return image;
   } catch (err: any) {
