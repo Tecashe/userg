@@ -2,8 +2,16 @@ import express from "express";
 import cors from "cors";
 import rateLimit from "express-rate-limit";
 import { clerkMiddleware } from "@clerk/express";
+import { v2 as cloudinary } from "cloudinary";
 import routes from "./routes/index.js";
 import clerkWebhooks from "./controllers/clerk.controller.js";
+
+// Configure Cloudinary globally
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
 
 const app = express();
 
